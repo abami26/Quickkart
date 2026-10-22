@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merchant review queue — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="adminNav"></ul></nav>
+</header>
+<main class="merchant-page">
+  <div class="merchant-page-heading">
+    <span class="location-kicker">ADMIN · DEMO REVIEW</span>
+    <h1>Merchant applications</h1>
+    <p>Review submitted business profiles. No identity documents are stored in this demo.</p>
+  </div>
+  <div class="merchant-notice admin-demo-warning">
+    <strong>Demo-only review queue</strong>
+    <p>Approval records a review decision but does not publish stores to customer search. There is no real KYC verification or secure production admin setup.</p>
+  </div>
+  <div class="admin-queue-toolbar">
+    <label for="statusFilter">Show
+      <select id="statusFilter">
+        <option value="all">All applications</option>
+        <option value="pending_review">Pending review</option>
+        <option value="changes_requested">Changes requested</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </label>
+    <button type="button" class="admin-refresh-button" onclick="loadApplications()">Refresh queue</button>
+  </div>
+  <p class="directory-status" id="queueStatus" role="status">Loading applications…</p>
+  <div id="applicationList" class="admin-application-list"></div>
+</main>
+<script src="common.js"></script>
+<script>
+if (!getUser() || getUser().accountType !== 'admin' || !getToken()) {
+  window.location.replace('admin-login.html');
+}
+renderAccountNav('adminNav');
+
+let applications = [];
+let queueLoading = false;
+const statusLabels = {
+  pending_review: 'Pending review',
+  changes_requested: 'Changes requested',
+  approved: 'Approved',
+  rejected: 'Rejected'
+};
+
+function renderApplications() {
+  const filter = document.getElementById('statusFilter').value;
+  const visible = filter === 'all' ? applications : applications.filter(application => application.kycStatus === filter);
+  const target = document.getElementById('applicationList');
+  if (!visible.length) {
+    target.innerHTML = '<div class="empty-msg">No applications in this view.</div>';
+    return;
+  }
+
+  target.innerHTML = visible.map(application => {
+    const canReview = ['pending_review', 'changes_requested'].includes(application.kycStatus);
+    const areas = (application.serviceAreas || []).map(escapeHtml).join(', ');
+    return `
+      <article class="admin-application-card">
+        <div class="admin-application-top">
+          <div>
+            <span class="location-kicker">APPLICATION #${escapeHtml(application.id)}</span>
+            <h2>${escapeHtml(application.storeName)}</h2>
+            <p>${escapeHtml(application.category)} · ${escapeHtml(application.city)}, ${escapeHtml(application.state)}</p>
+          </div>
+          <span class="merchant-status status-${escapeHtml(application.kycStatus)}">${escapeHtml(statusLabels[application.kycStatus] || application.kycStatus)}</span>
+        </div>
+        <div class="admin-application-details">
+          <p><strong>Owner:</strong> ${escapeHtml(application.ownerName)} · <a href="mailto:${escapeHtml(application.email)}">${escapeHtml(application.email)}</a></p>
+          <p><strong>Phone:</strong> ${escapeHtml(application.phone)}</p>
+          <p><strong>Address:</strong> ${escapeHtml(application.address)}</p>
+          <p><strong>Service areas:</strong> ${areas}</p>
+          <p><strong>Description:</strong> ${escapeHtml(application.description || 'No description provided')}</p>
+          <p><strong>Submitted:</strong> ${escapeHtml(new Date(application.createdAt).toLocaleString())}</p>
+          ${application.reviewNote ? `<p class="admin-review-note"><strong>Previous note:</strong> ${escapeHtml(application.reviewNote)}</p>` : ''}
+        </div>
+        ${canReview ? `
+          <div class="admin-review-controls">
+            <label for="review-note-${escapeHtml(application.id)}">Review note <span>(required for reject or request changes)</span>
+              <textarea id="review-note-${escapeHtml(application.id)}" rows="2" maxlength="2000" placeholder="Explain your decision or what needs to change"></textarea>
+            </label>
+            <div class="admin-review-actions">
+              <button type="button" class="review-approve" onclick="reviewApplication(${Number(application.id)}, 'approved')">Approve</button>
+              <button type="button" class="review-changes" onclick="reviewApplication(${Number(application.id)}, 'changes_requested')">Request changes</button>
+              <button type="button" class="review-reject" onclick="reviewApplication(${Number(application.id)}, 'rejected')">Reject</button>
+            </div>
+          </div>
+        ` : `
+          <p class="admin-reviewed-meta">Reviewed by ${escapeHtml(application.reviewedBy || 'admin')}${application.reviewedAt ? ` · ${escapeHtml(new Date(application.reviewedAt).toLocaleString())}` : ''}</p>
+        `}
+      </article>
+    `;
+  }).join('');
+}
+
+async function loadApplications() {
+  if (queueLoading) return;
+  queueLoading = true;
+  const status = document.getElementById('queueStatus');
+  status.textContent = 'Loading applications…';
+  try {
+    const result = await api('/api/admin/merchant-applications');
+    applications = result.applications;
+    status.textContent = `${applications.length} application${applications.length === 1 ? '' : 's'} total.`;
+    renderApplications();
+  } catch (error) {
+    status.textContent = error.message;
+    if (error.message.toLowerCase().includes('admin')) {
+      setTimeout(() => window.location.replace('admin-login.html'), 700);
+    }
+  } finally {
+    queueLoading = false;
+  }
+}
+
+async function reviewApplication(id, decision) {
+  const note = document.getElementById(`review-note-${id}`).value.trim();
+  if (decision !== 'approved' && !note) {
+    showToast('Add a review note for this decision.', true);
+    return;
+  }
+  try {
+    await api(`/api/admin/merchant-applications/${id}/review`, {
+      method: 'PUT',
+      body: JSON.stringify({ decision, note })
+    });
+    showToast(`Application ${statusLabels[decision].toLowerCase()}.`);
+    await loadApplications();
+  } catch (error) {
+    showToast(error.message, true);
+  }
+}
+
+document.getElementById('statusFilter').addEventListener('change', renderApplications);
+if (getUser()?.accountType === 'admin' && getToken()) loadApplications();
+</script>
+</body>
+</html>

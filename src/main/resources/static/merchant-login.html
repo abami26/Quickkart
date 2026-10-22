@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merchant log in — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul>
+    <li><a href="index.html">Shop</a></li>
+    <li><a href="merchant-signup.html">List your store</a></li>
+  </ul></nav>
+</header>
+<main class="merchant-auth-wrap">
+  <section class="auth-card">
+    <span class="location-kicker">QUICKCART MERCHANTS</span>
+    <h1>Merchant log in</h1>
+    <p class="sub">Manage your store profile and review application status.</p>
+    <p class="auth-error" id="errorMsg" role="alert"></p>
+    <form id="merchantLoginForm">
+      <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="auth-btn" type="submit" id="merchantLoginButton">Log in to your store</button>
+    </form>
+    <p class="auth-switch">Need a merchant account? <a href="merchant-signup.html">Apply to list your store</a></p>
+    <p class="merchant-customer-link"><a href="login.html">Customer log in</a></p>
+  </section>
+</main>
+<script src="common.js"></script>
+<script>
+document.getElementById('merchantLoginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const error = document.getElementById('errorMsg');
+  const button = document.getElementById('merchantLoginButton');
+  error.classList.remove('show');
+  button.disabled = true;
+  try {
+    const result = await api('/api/merchant/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      })
+    });
+    setSession(result.token, {
+      name: result.merchant.ownerName,
+      email: result.merchant.email,
+      accountType: 'merchant'
+    });
+    window.location.href = 'merchant-dashboard.html';
+  } catch (err) {
+    error.textContent = err.message;
+    error.classList.add('show');
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

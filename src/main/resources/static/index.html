@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuickCart — Local Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="accountNav">
+    <li><a>Groceries</a></li>
+    <li><a>Meals</a></li>
+  </ul></nav>
+  <button class="cart-btn" id="cartButton" onclick="openCart()">
+    🛍 Cart <span class="cart-count" id="cartCount">0</span>
+  </button>
+</header>
+
+<div class="delivery-banner">
+  <div class="banner-mark">QC</div>
+  <div class="banner-copy">
+    <strong>Find shops and products near you.</strong>
+    <span>Set your delivery area to see what's available nearby.</span>
+  </div>
+  <div class="banner-action"><span>Currently serving</span><strong>Lagos</strong></div>
+  <a href="#location" class="banner-link">Choose area <span aria-hidden="true">→</span></a>
+</div>
+
+<div class="hero">
+  <div>
+    <h1>Order from local shops.<br>Delivered to your door.</h1>
+    <p>QuickCart connects neighborhood grocers and kitchens to one simple checkout — pick what you need, and get it brought to your door.</p>
+    <button class="cta" onclick="document.getElementById('location').scrollIntoView({behavior:'smooth'})">Start an order</button>
+    <div class="hero-stats">
+      <div><div class="num">120+</div><div class="lbl">Local vendors</div></div>
+      <div><div class="num">4.8★</div><div class="lbl">Average rating</div></div>
+      <div><div class="num">28 min</div><div class="lbl">Avg. delivery time</div></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="tag"><span class="live-dot"></span> Demo order · Ikeja</div>
+    <div class="route-map" aria-hidden="true">
+      <div class="route-line"></div>
+      <div class="route-stop shop-stop">M</div>
+      <div class="route-stop home-stop">⌂</div>
+      <div class="route-caption">Mama Nkechi's Store <span>→</span>Your door</div>
+    </div>
+    <div class="order-status">
+      <div>
+        <div class="eta">03 <span>min</span></div>
+        <div class="eta-lbl">Illustrative delivery progress</div>
+      </div>
+      <div class="status-mark">✓</div>
+    </div>
+    <div class="hero-demo-note">Demo route only · no live rider GPS</div>
+  </div>
+</div>
+
+<section class="location-section" id="location">
+  <div class="location-intro">
+    <span class="location-kicker">QUICKCART NEAR YOU</span>
+    <h2>Where should we look?</h2>
+    <p>Choose your Lagos area to see partner shops and products that serve you.</p>
+  </div>
+  <div class="location-form">
+    <label for="locationCity">Your area</label>
+    <div class="location-controls">
+      <select id="locationCity">
+        <option value="">Choose your area</option>
+        <option value="Agege">Agege</option>
+        <option value="Alimosho">Alimosho</option>
+        <option value="Ajah">Ajah</option>
+        <option value="Badagry">Badagry</option>
+        <option value="Epe">Epe</option>
+        <option value="Ikeja">Ikeja</option>
+        <option value="Kosofe">Kosofe</option>
+        <option value="Lekki">Lekki</option>
+        <option value="Ojo">Ojo</option>
+        <option value="Somolu">Somolu</option>
+        <option value="Surulere">Surulere</option>
+        <option value="Victoria Island">Victoria Island</option>
+        <option value="Yaba">Yaba</option>
+      </select>
+      <button class="location-submit" type="button" onclick="findNearbyShops()">Find nearby shops <span aria-hidden="true">→</span></button>
+      <button class="location-gps" type="button" onclick="useMyLocation()">◎ Use my location</button>
+    </div>
+    <p class="location-status" id="locationStatus" role="status">Select an area to see what is available.</p>
+  </div>
+</section>
+
+<section class="map-section" aria-labelledby="mapHeading">
+  <div class="map-info">
+    <span class="location-kicker">LOCAL DELIVERY MAP</span>
+    <h2 id="mapHeading">Explore your area</h2>
+    <p id="mapDescription">Choose a Lagos area above to center the map and browse shops serving that location.</p>
+    <a id="googleMapLink" href="https://www.google.com/maps/search/?api=1&query=Lagos%2C%20Nigeria" target="_blank" rel="noopener noreferrer">Open in Google Maps <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="map-frame">
+    <iframe id="googleMap" title="Google Map of Lagos delivery area" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=Lagos%2C%20Nigeria&output=embed"></iframe>
+  </div>
+</section>
+
+<section id="shop" hidden>
+  <div class="section-head">
+    <div>
+      <h2 id="shopHeading">Shops near you</h2>
+      <p id="shopSubheading">Available shops and products for your selected area.</p>
+    </div>
+    <div class="filters">
+      <button class="active" onclick="filterCat('all',this)">All</button>
+      <button onclick="filterCat('grocery',this)">Groceries</button>
+      <button onclick="filterCat('produce',this)">Produce</button>
+      <button onclick="filterCat('meal',this)">Meals</button>
+      <button onclick="filterCat('bakery',this)">Bakery</button>
+      <button onclick="filterCat('drink',this)">Drinks</button>
+      <button onclick="filterCat('snack',this)">Snacks</button>
+      <button onclick="filterCat('household',this)">Household</button>
+      <button onclick="filterCat('personal',this)">Personal care</button>
+    </div>
+  </div>
+  <div class="store-grid" id="storeGrid"></div>
+  <h3 class="products-heading">Products from these shops</h3>
+  <div class="grid" id="productGrid"></div>
+</section>
+
+<div class="how" id="how">
+  <h2>How QuickCart works</h2>
+  <div class="how-grid">
+    <div class="step">
+      <div class="step-art step-art-shop" aria-hidden="true">
+        <div class="market-crate"><span>🍅</span><span>🥬</span><span>🥑</span></div>
+        <div class="person person-shopper">
+          <div class="person-hair"></div><div class="person-head"></div>
+          <div class="person-arm person-arm-left"></div><div class="person-arm person-arm-right"></div>
+          <div class="person-body"></div><div class="person-leg person-leg-left"></div><div class="person-leg person-leg-right"></div>
+        </div>
+        <div class="shopper-tote">QC</div>
+      </div>
+      <div class="n">01</div>
+      <h3>Choose your items</h3>
+      <p>Browse nearby vendors and add whatever you need to your cart.</p>
+    </div>
+    <div class="step">
+      <div class="step-art step-art-address" aria-hidden="true">
+        <div class="address-pin">⌖</div>
+        <div class="person person-customer">
+          <div class="person-hair"></div><div class="person-head"></div>
+          <div class="person-arm person-arm-left"></div><div class="person-arm person-arm-right"></div>
+          <div class="person-body"></div><div class="person-leg person-leg-left"></div><div class="person-leg person-leg-right"></div>
+        </div>
+        <div class="customer-phone"><span></span><span></span><span></span></div>
+      </div>
+      <div class="n">02</div>
+      <h3>Confirm delivery details</h3>
+      <p>Drop your address and pick a time — now or scheduled for later.</p>
+    </div>
+    <div class="step">
+      <div class="step-art step-art-delivery" aria-hidden="true">
+        <div class="delivery-box">QC</div>
+        <div class="person person-rider">
+          <div class="person-hair"></div><div class="person-head"></div>
+          <div class="person-arm person-arm-left"></div><div class="person-arm person-arm-right"></div>
+          <div class="person-body"></div><div class="person-leg person-leg-left"></div><div class="person-leg person-leg-right"></div>
+        </div>
+        <div class="delivery-wheel delivery-wheel-left"></div><div class="delivery-wheel delivery-wheel-right"></div>
+        <div class="delivery-bike"></div>
+      </div>
+      <div class="n">03</div>
+      <h3>Track it live</h3>
+      <p>Watch your rider move from the shop to your doorstep in real time.</p>
+    </div>
+  </div>
+</div>
+
+<section class="merchant-cta-section" aria-labelledby="merchantCtaTitle">
+  <div class="merchant-cta-art" aria-hidden="true">
+    <span class="merchant-cta-bag">QC</span>
+    <span class="merchant-cta-spark merchant-spark-one">✦</span>
+    <span class="merchant-cta-spark merchant-spark-two">✦</span>
+  </div>
+  <div class="merchant-cta-copy">
+    <span class="location-kicker">FOR LAGOS BUSINESS OWNERS</span>
+    <h2 id="merchantCtaTitle">Bring your store to QuickCart</h2>
+    <p>Create a store profile, choose the areas you serve, and submit your business details for review. No identity documents are collected in this demo.</p>
+    <div class="merchant-cta-actions">
+      <a class="merchant-cta-button" href="merchant-signup.html">List your store <span aria-hidden="true">→</span></a>
+      <a class="merchant-login-link" href="merchant-login.html">Already applied? Merchant log in</a>
+    </div>
+    <small>Applications stay private and pending until reviewed; they are not published to shoppers yet.</small>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-sitemap">
+    <div class="footer-column footer-products">
+      <h3>Shop</h3>
+      <a href="#location"><span class="footer-product-icon">G</span> Groceries</a>
+      <a href="#location"><span class="footer-product-icon">P</span> Fresh produce</a>
+      <a href="#location"><span class="footer-product-icon">M</span> Meals</a>
+      <a href="#location"><span class="footer-product-icon">D</span> Drinks & snacks</a>
+    </div>
+    <div class="footer-column">
+      <h3>Resources</h3>
+      <a href="stores.html">Browse stores</a>
+      <a href="merchant-signup.html">Sell on QuickCart</a>
+      <a href="#how">How it works</a>
+      <a href="help.html">Help & FAQs</a>
+      <a href="help.html">Delivery information</a>
+      <a href="admin-login.html">Demo admin</a>
+    </div>
+    <div class="footer-column">
+      <h3>Account</h3>
+      <a href="orders.html">My orders</a>
+      <a href="login.html">Sign in</a>
+      <a href="signup.html">Create account</a>
+    </div>
+    <div class="footer-column">
+      <h3>Delivery</h3>
+      <span>Lagos, Nigeria</span>
+      <span>Flat ₦800 delivery fee</span>
+      <a href="stores.html">Covered areas</a>
+    </div>
+    <div class="footer-column">
+      <h3>Privacy</h3>
+      <a href="#visitorCount" onclick="openVisitorCookieSettings(event)">Cookie settings</a>
+      <span>Visitor counting is optional</span>
+    </div>
+  </div>
+  <div class="footer-brandbar">
+    <div class="footer-brand-lockup">
+      <a href="index.html" class="brand footer-brand">Quick<span>Cart</span></a>
+      <span>Local shops. Right to your door.</span>
+    </div>
+    <div class="footer-socials" aria-label="Share QuickCart">
+      <a href="#" aria-label="Share QuickCart on WhatsApp" title="Share on WhatsApp" onclick="shareQuickCart('whatsapp', event)">wa</a>
+      <a href="#" aria-label="Share QuickCart on Facebook" title="Share on Facebook" onclick="shareQuickCart('facebook', event)">f</a>
+      <a href="#" aria-label="Share QuickCart on X" title="Share on X" onclick="shareQuickCart('x', event)">𝕏</a>
+    </div>
+  </div>
+  <p class="footer-disclaimer">QuickCart is a class project demo. Store availability, products, and prices are sample data; delivery is not a live courier service.</p>
+  <div class="footer-bottom">
+    <span>© 2026 QuickCart · Class project demo</span>
+    <span id="visitorCount">Visitor count requires your choice</span>
+    <span>Built for MMS4 NIIT Web Track</span>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3>Your cart</h3>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-foot">
+    <div class="field" id="addressField" style="display:none;">
+      <label for="streetAddress">Street address</label>
+      <input type="text" id="streetAddress" placeholder="e.g. 14 Adeola Street">
+
+      <div class="delivery-row">
+        <div class="delivery-col">
+          <label for="citySelect">City</label>
+          <select id="citySelect">
+            <option value="">Choose city</option>
+            <option value="Agege">Agege</option>
+            <option value="Alimosho">Alimosho</option>
+            <option value="Ajah">Ajah</option>
+            <option value="Badagry">Badagry</option>
+            <option value="Epe">Epe</option>
+            <option value="Ikeja">Ikeja</option>
+            <option value="Kosofe">Kosofe</option>
+            <option value="Lekki">Lekki</option>
+            <option value="Ojo">Ojo</option>
+            <option value="Somolu">Somolu</option>
+            <option value="Surulere">Surulere</option>
+            <option value="Victoria Island">Victoria Island</option>
+            <option value="Yaba">Yaba</option>
+          </select>
+        </div>
+
+        <div class="delivery-col">
+          <label for="stateSelect">State</label>
+          <select id="stateSelect">
+            <option value="Lagos" selected>Lagos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row"><span>Subtotal</span><span id="subtotal">₦0</span></div>
+    <div class="row"><span>Delivery fee</span><span id="deliveryFee">₦0</span></div>
+    <div class="row total"><span>Total</span><span id="total">₦0</span></div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>Place order</button>
+  </div>
+</div>
+
+<div class="payment-modal" id="paymentModal" hidden>
+  <section class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="paymentTitle" aria-describedby="paymentNotice">
+    <span class="success-eyebrow">CHECKOUT · FINAL STEP</span>
+    <h2 id="paymentTitle">Confirm demo payment</h2>
+    <p class="payment-total-label">Order total</p>
+    <p class="payment-total" id="paymentTotal">₦0</p>
+    <div class="payment-demo-notice" id="paymentNotice">
+      <strong>Demo only — no money will be charged.</strong>
+      <span>This project does not process real payments or collect payment details.</span>
+    </div>
+    <button type="button" class="success-done" id="demoPaymentSubmit" onclick="confirmDemoPayment()">Simulate payment &amp; place order</button>
+    <button type="button" class="payment-cancel" id="cancelDemoPayment" onclick="closePaymentModal()">Back to checkout</button>
+  </section>
+</div>
+
+<div class="order-success-modal" id="orderSuccessModal" hidden>
+  <section class="order-success-dialog" role="dialog" aria-modal="true" aria-labelledby="orderSuccessTitle" aria-describedby="orderSuccessMessage">
+    <div class="success-icon" aria-hidden="true">
+      <svg viewBox="0 0 72 72" focusable="false">
+        <path class="success-badge" d="M36 3.5 44 8l9.2-.5 5 7.8 8.5 3.4.6 9.2 5.2 7.6-4.2 8.2.5 9.2-7.8 5-3.4 8.5-9.2.6L36 72l-8.2-4.2-9.2.5-5-7.8-8.5-3.4-.6-9.2L-.7 40.3l4.2-8.2-.5-9.2 7.8-5 3.4-8.5 9.2-.6z" transform="translate(1 0)"/>
+        <path class="success-check" d="m22 37 9 9 20-21"/>
+      </svg>
+    </div>
+    <span class="success-eyebrow">ORDER CONFIRMED</span>
+    <h2 id="orderSuccessTitle">Successful</h2>
+    <p id="orderSuccessMessage">Your order has been placed successfully.</p>
+    <p class="success-reference" id="orderSuccessReference"></p>
+    <button type="button" class="success-done" id="orderSuccessDone" onclick="closeOrderSuccess()">Done</button>
+    <a class="success-orders-link" href="orders.html">View my orders</a>
+  </section>
+</div>
+
+<script src="common.js"></script>
+<script>
+let PRODUCTS = [];
+let NEARBY_STORES = [];
+let cart = {}; // {id: qty}
+let currentFilter = 'all';
+let previousFocus = null;
+let isSubmittingOrder = false;
+
+function setMapLocation(query, description, title) {
+  const encodedQuery = encodeURIComponent(query);
+  const map = document.getElementById('googleMap');
+  map.src = `https://maps.google.com/maps?q=${encodedQuery}&output=embed`;
+  map.title = title;
+  document.getElementById('mapDescription').textContent = description;
+  document.getElementById('googleMapLink').href = `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
+}
+
+function shareQuickCart(platform, event) {
+  event.preventDefault();
+  const pageUrl = encodeURIComponent(window.location.href);
+  const message = encodeURIComponent('Find local shops and products with QuickCart');
+  const shareUrls = {
+    whatsapp: `https://wa.me/?text=${message}%20${pageUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`,
+    x: `https://twitter.com/intent/tweet?url=${pageUrl}&text=${message}`
+  };
+  window.open(shareUrls[platform], '_blank', 'noopener,noreferrer');
+}
+
+function useMyLocation() {
+  const status = document.getElementById('locationStatus');
+  if (!navigator.geolocation) {
+    status.textContent = 'Location is not available in this browser. Choose your area from the list.';
+    return;
+  }
+
+  status.textContent = 'Requesting your location permission...';
+  navigator.geolocation.getCurrentPosition(position => {
+    const coordinates = `${position.coords.latitude},${position.coords.longitude}`;
+    setMapLocation(coordinates, 'Map centered on your device location. Confirm your Lagos area above to see shops serving you.', 'Google Map centered on your device location');
+    status.textContent = 'Your location is on the map. Choose your Lagos area to find nearby shops.';
+  }, error => {
+    const message = error.code === error.PERMISSION_DENIED
+      ? 'Location permission was denied. Choose your area from the list instead.'
+      : 'Could not get your location. Choose your area from the list instead.';
+    status.textContent = message;
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+}
+
+async function findNearbyShops(shouldScroll = true) {
+  const city = document.getElementById('locationCity').value;
+  const status = document.getElementById('locationStatus');
+  const shopSection = document.getElementById('shop');
+
+  if (!city) {
+    showToast('Choose your area first', true);
+    return;
+  }
+
+  setMapLocation(`${city}, Lagos, Nigeria`, `Map centered on ${city}, Lagos. Shops shown below serve this area.`, `Google Map of ${city}, Lagos`);
+  if (localStorage.getItem('qc_delivery_city') && localStorage.getItem('qc_delivery_city') !== city) {
+    cart = {};
+    updateCart();
+  }
+  status.textContent = `Looking for shops in ${city}...`;
+  shopSection.hidden = true;
+
+  try {
+    const stores = await api(`/api/stores?city=${encodeURIComponent(city)}`);
+    if (stores.length === 0) {
+      NEARBY_STORES = [];
+      PRODUCTS = [];
+      localStorage.removeItem('qc_delivery_city');
+      updateCart();
+      status.textContent = `No partner shops serve ${city} yet. Try another Lagos area.`;
+      return;
+    }
+
+    localStorage.setItem('qc_delivery_city', city);
+    document.getElementById('citySelect').value = city;
+    document.getElementById('shopHeading').textContent = `Shops near ${city}`;
+    document.getElementById('shopSubheading').textContent = `Partner shops and their available products in ${city}.`;
+    NEARBY_STORES = stores;
+    PRODUCTS = stores.flatMap(store => store.products.map(product => ({ ...product, storeName: store.name })));
+    updateCart();
+    renderStores();
+    renderGrid();
+    shopSection.hidden = false;
+    status.textContent = `${stores.length} partner shop${stores.length === 1 ? '' : 's'} found in ${city}.`;
+    if (shouldScroll) shopSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    status.textContent = err.message;
+  }
+}
+
+function renderStores() {
+  document.getElementById('storeGrid').innerHTML = NEARBY_STORES.map(store => `
+    <article class="store-card">
+      <div class="store-card-top">
+        <div class="store-icon">${store.icon}</div>
+        <div>
+          <h3>${store.name}</h3>
+          <p>${store.category}</p>
+        </div>
+      </div>
+      <div class="store-card-bottom">
+        <span>Serving ${document.getElementById('locationCity').value}</span>
+        <strong>${store.products.length} items</strong>
+      </div>
+    </article>
+  `).join('');
+}
+
+function restoreDeliveryArea() {
+  const requestedCity = new URLSearchParams(window.location.search).get('area');
+  const savedCity = requestedCity || localStorage.getItem('qc_delivery_city');
+  if (!savedCity) return;
+  const locationSelect = document.getElementById('locationCity');
+  locationSelect.value = savedCity;
+  if (locationSelect.value) findNearbyShops(Boolean(requestedCity));
+}
+
+function renderGrid(){
+  const grid = document.getElementById('productGrid');
+  const items = PRODUCTS.filter(p => currentFilter==='all' || p.cat===currentFilter);
+  if (items.length === 0) {
+    grid.innerHTML = '<p class="empty-results">No products in this category at your nearby shops.</p>';
+    return;
+  }
+  grid.innerHTML = items.map(p => `
+    <div class="card">
+      <div class="card-img">${p.icon}</div>
+      <h3>${p.name}</h3>
+      <p class="desc">${p.desc}</p>
+      <p class="product-store">${p.storeName}</p>
+      <div class="card-foot">
+        <span class="price">${money(p.price)}</span>
+        <button class="add-btn" onclick="addToCart(${p.id})">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCat(cat, btn){
+  currentFilter = cat;
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function addToCart(id){
+  cart[id] = (cart[id] || 0) + 1;
+  updateCart();
+  showToast('Added to cart');
+}
+
+function changeQty(id, delta){
+  cart[id] = (cart[id]||0) + delta;
+  if(cart[id] <= 0) delete cart[id];
+  updateCart();
+}
+
+function updateCart(){
+  const ids = Object.keys(cart);
+  const count = ids.reduce((s,id)=>s+cart[id],0);
+  document.getElementById('cartCount').textContent = count;
+
+  const drawerItems = document.getElementById('drawerItems');
+  if(ids.length === 0){
+    drawerItems.innerHTML = `<div class="empty-msg">Your cart is empty.<br>Add something tasty from the shop.</div>`;
+  } else {
+    drawerItems.innerHTML = ids.map(id=>{
+      const p = PRODUCTS.find(x=>x.id==id);
+      return `
+        <div class="cart-line">
+          <div class="ic">${p.icon}</div>
+          <div class="info">
+            <div class="nm">${p.name}</div>
+            <div class="pr">${money(p.price)}</div>
+          </div>
+          <div class="qty">
+            <button onclick="changeQty(${id},-1)">−</button>
+            <span>${cart[id]}</span>
+            <button onclick="changeQty(${id},1)">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const subtotal = ids.reduce((s,id)=> s + PRODUCTS.find(x=>x.id==id).price * cart[id], 0);
+  const fee = subtotal > 0 ? 800 : 0;
+  document.getElementById('subtotal').textContent = money(subtotal);
+  document.getElementById('deliveryFee').textContent = money(fee);
+  document.getElementById('total').textContent = money(subtotal + fee);
+  document.getElementById('checkoutBtn').disabled = subtotal === 0;
+  document.getElementById('addressField').style.display = subtotal > 0 ? 'block' : 'none';
+}
+
+function openCart(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeCart(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function showOrderSuccess(order){
+  const modal = document.getElementById('orderSuccessModal');
+  const message = document.getElementById('orderSuccessMessage');
+  const reference = document.getElementById('orderSuccessReference');
+  previousFocus = document.getElementById('cartButton');
+  message.textContent = `Your order has been placed successfully${order?.total != null ? ` for ${money(order.total)}` : ''}.`;
+  reference.textContent = order?.id ? `Order #${order.id}` : '';
+  modal.hidden = false;
+  document.body.classList.add('modal-open');
+  document.getElementById('orderSuccessDone').focus();
+}
+
+function closeOrderSuccess(){
+  const modal = document.getElementById('orderSuccessModal');
+  if (modal.hidden) return;
+  modal.hidden = true;
+  document.body.classList.remove('modal-open');
+  if (previousFocus instanceof HTMLElement) previousFocus.focus();
+}
+
+function openPaymentModal(){
+  const modal = document.getElementById('paymentModal');
+  document.getElementById('paymentTotal').textContent = document.getElementById('total').textContent;
+  previousFocus = document.getElementById('checkoutBtn');
+  modal.hidden = false;
+  document.body.classList.add('modal-open');
+  document.getElementById('demoPaymentSubmit').focus();
+}
+
+function closePaymentModal(){
+  const modal = document.getElementById('paymentModal');
+  if (modal.hidden || isSubmittingOrder) return;
+  modal.hidden = true;
+  document.body.classList.remove('modal-open');
+  if (previousFocus instanceof HTMLElement) previousFocus.focus();
+}
+
+document.addEventListener('keydown', event => {
+  const modal = document.getElementById('paymentModal').hidden
+    ? document.getElementById('orderSuccessModal')
+    : document.getElementById('paymentModal');
+  if (modal.hidden) return;
+  if (event.key === 'Escape') {
+    if (modal.id === 'paymentModal') closePaymentModal();
+    else closeOrderSuccess();
+    return;
+  }
+  if (event.key === 'Tab') {
+    const focusable = modal.querySelectorAll('button:not([disabled]), a[href]');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+});
+
+function checkout(){
+  if (!getUser()) {
+    showToast('Please sign in to place an order', true);
+    setTimeout(()=> window.location.href = 'login.html', 900);
+    return;
+  }
+  if (getUser().accountType === 'merchant') {
+    showToast('Merchant accounts cannot place customer orders. Log out and use a customer account.', true);
+    return;
+  }
+
+  const street = document.getElementById('streetAddress').value.trim();
+  const city = document.getElementById('citySelect').value.trim();
+  const state = document.getElementById('stateSelect').value.trim();
+
+  if (!street) {
+    showToast('Please enter your street address', true);
+    return;
+  }
+  if (!city) {
+    showToast('Please choose a Lagos city', true);
+    return;
+  }
+  if (!state || state.toLowerCase() !== 'lagos') {
+    showToast('QuickCart delivery is only available in Lagos, Lagos State', true);
+    return;
+  }
+
+  openPaymentModal();
+}
+
+async function confirmDemoPayment(){
+  if (isSubmittingOrder) return;
+  const button = document.getElementById('demoPaymentSubmit');
+  const street = document.getElementById('streetAddress').value.trim();
+  const city = document.getElementById('citySelect').value.trim();
+  const state = document.getElementById('stateSelect').value.trim();
+  const address = `${street}, ${city}, ${state}`;
+  isSubmittingOrder = true;
+  button.disabled = true;
+  button.textContent = 'Placing demo order...';
+  try {
+    const result = await api('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ items: cart, address, street, city, state, paymentMethod: 'DEMO' })
+    });
+    document.getElementById('paymentModal').hidden = true;
+    cart = {};
+    updateCart();
+    closeCart();
+    showOrderSuccess(result.order);
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    isSubmittingOrder = false;
+    button.disabled = false;
+    button.textContent = 'Simulate payment & place order';
+  }
+}
+
+renderAccountNav('accountNav');
+restoreDeliveryArea();
+updateCart();
+</script>
+
+</body>
+</html>

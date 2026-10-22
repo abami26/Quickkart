@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin log in — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul><li><a href="index.html">Back to QuickCart</a></li></ul></nav>
+</header>
+<main class="merchant-auth-wrap">
+  <section class="auth-card">
+    <span class="location-kicker">INTERNAL DEMO TOOL</span>
+    <h1>Admin log in</h1>
+    <p class="sub">Review merchant applications and leave a decision note.</p>
+    <div class="merchant-notice admin-demo-warning">
+      <strong>Demo credentials — not for production</strong>
+      <p>Email: <code>admin@quickcart.local</code><br>Password: <code>QuickCartAdmin2026!</code></p>
+      <p>These fixed credentials and this review page are for local coursework only. Do not deploy them publicly.</p>
+    </div>
+    <p class="auth-error" id="errorMsg" role="alert"></p>
+    <form id="adminLoginForm">
+      <div class="field"><label for="email">Admin email</label><input id="email" type="email" autocomplete="username" value="admin@quickcart.local" required></div>
+      <div class="field"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" value="QuickCartAdmin2026!" required></div>
+      <button class="auth-btn" type="submit" id="adminLoginButton">Open review queue</button>
+    </form>
+  </section>
+</main>
+<script src="common.js"></script>
+<script>
+document.getElementById('adminLoginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const error = document.getElementById('errorMsg');
+  const button = document.getElementById('adminLoginButton');
+  error.classList.remove('show');
+  button.disabled = true;
+  try {
+    const result = await api('/api/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      })
+    });
+    setSession(result.token, result.admin);
+    window.location.href = 'admin-dashboard.html';
+  } catch (err) {
+    error.textContent = err.message;
+    error.classList.add('show');
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List your store — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul>
+    <li><a href="index.html">Shop</a></li>
+    <li><a href="merchant-login.html">Merchant log in</a></li>
+  </ul></nav>
+</header>
+
+<main class="merchant-page">
+  <div class="merchant-page-heading">
+    <span class="location-kicker">QUICKCART MERCHANTS · LAGOS DEMO</span>
+    <h1>Apply to list your store</h1>
+    <p>Set up a business profile and tell us which Lagos areas you serve. Your application will remain private while it is reviewed.</p>
+  </div>
+
+  <div class="merchant-notice">
+    <strong>Demo KYC process — no documents collected</strong>
+    <p>This application collects business contact and store details only. For a real KYC review, an administrator would verify owner identity, business registration where applicable, and proof of business address through a secure process. Do not enter ID numbers or upload documents here.</p>
+  </div>
+
+  <form class="merchant-form" id="merchantSignupForm">
+    <p class="auth-error" id="errorMsg" role="alert"></p>
+    <fieldset>
+      <legend>Account and owner</legend>
+      <div class="merchant-form-grid">
+        <label>Owner or contact name<input id="ownerName" name="ownerName" autocomplete="name" maxlength="120" required></label>
+        <label>Business phone<input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="30" required></label>
+        <label>Email<input id="email" name="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required><small>Use at least 8 characters.</small></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Store profile</legend>
+      <div class="merchant-form-grid">
+        <label>Store name<input id="storeName" name="storeName" maxlength="120" required></label>
+        <label>Category
+          <select id="category" name="category" required>
+            <option value="">Choose category</option>
+            <option>Groceries & essentials</option>
+            <option>Fresh produce</option>
+            <option>Meals & restaurant</option>
+            <option>Bakery</option>
+            <option>Drinks & snacks</option>
+            <option>Household</option>
+            <option>Personal care</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label class="merchant-full-field">Short description<textarea id="description" name="description" rows="3" maxlength="1000" placeholder="What does your store offer?"></textarea></label>
+        <label class="merchant-full-field">Store address<input id="address" name="address" autocomplete="street-address" maxlength="240" required></label>
+        <label>City
+          <select id="city" name="city" required>
+            <option value="">Choose city</option>
+            <option>Agege</option><option>Alimosho</option><option>Ajah</option><option>Badagry</option>
+            <option>Epe</option><option>Ikeja</option><option>Kosofe</option><option>Lekki</option>
+            <option>Ojo</option><option>Somolu</option><option>Surulere</option><option>Victoria Island</option><option>Yaba</option>
+          </select>
+        </label>
+        <label>State<input value="Lagos" readonly aria-readonly="true"></label>
+      </div>
+      <div class="service-area-field">
+        <span class="service-area-label">Areas you serve <small>Select one or more</small></span>
+        <div class="service-area-options">
+          <label><input type="checkbox" name="serviceArea" value="Agege"> Agege</label>
+          <label><input type="checkbox" name="serviceArea" value="Alimosho"> Alimosho</label>
+          <label><input type="checkbox" name="serviceArea" value="Ajah"> Ajah</label>
+          <label><input type="checkbox" name="serviceArea" value="Badagry"> Badagry</label>
+          <label><input type="checkbox" name="serviceArea" value="Epe"> Epe</label>
+          <label><input type="checkbox" name="serviceArea" value="Ikeja"> Ikeja</label>
+          <label><input type="checkbox" name="serviceArea" value="Kosofe"> Kosofe</label>
+          <label><input type="checkbox" name="serviceArea" value="Lekki"> Lekki</label>
+          <label><input type="checkbox" name="serviceArea" value="Ojo"> Ojo</label>
+          <label><input type="checkbox" name="serviceArea" value="Somolu"> Somolu</label>
+          <label><input type="checkbox" name="serviceArea" value="Surulere"> Surulere</label>
+          <label><input type="checkbox" name="serviceArea" value="Victoria Island"> Victoria Island</label>
+          <label><input type="checkbox" name="serviceArea" value="Yaba"> Yaba</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <label class="merchant-declaration"><input type="checkbox" id="kycConsent" required>
+      <span>I confirm that the business information is accurate and that I am the owner or authorized representative. I understand this demo does not collect KYC documents and my store will not be listed until it is reviewed.</span>
+    </label>
+    <button class="auth-btn" type="submit" id="merchantSignupButton">Create merchant account &amp; submit for review</button>
+    <p class="auth-switch">Already have a merchant account? <a href="merchant-login.html">Log in</a></p>
+  </form>
+</main>
+
+<script src="common.js"></script>
+<script>
+document.getElementById('merchantSignupForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const error = document.getElementById('errorMsg');
+  const button = document.getElementById('merchantSignupButton');
+  error.classList.remove('show');
+  const serviceAreas = [...document.querySelectorAll('input[name="serviceArea"]:checked')].map(input => input.value);
+  if (!serviceAreas.length) {
+    error.textContent = 'Choose at least one area your store serves.';
+    error.classList.add('show');
+    return;
+  }
+  button.disabled = true;
+  try {
+    const result = await api('/api/merchant/signup', {
+      method: 'POST',
+      body: JSON.stringify({
+        ownerName: document.getElementById('ownerName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        phone: document.getElementById('phone').value.trim(),
+        storeName: document.getElementById('storeName').value.trim(),
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        city: document.getElementById('city').value,
+        state: 'Lagos',
+        serviceAreas,
+        kycConsentAccepted: document.getElementById('kycConsent').checked
+      })
+    });
+    setSession(result.token, {
+      name: result.merchant.ownerName,
+      email: result.merchant.email,
+      accountType: 'merchant'
+    });
+    window.location.href = 'merchant-dashboard.html';
+  } catch (err) {
+    error.textContent = err.message;
+    error.classList.add('show');
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

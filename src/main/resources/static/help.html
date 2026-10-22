@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help & FAQs — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="accountNav"></ul></nav>
+</header>
+
+<main class="help-page">
+  <div class="help-heading">
+    <span class="location-kicker">QUICKCART SUPPORT</span>
+    <h1>How can we help?</h1>
+    <p>Quick answers for finding a shop, placing an order, and getting it delivered.</p>
+  </div>
+
+  <section class="faq-list" aria-label="Frequently asked questions">
+    <details>
+      <summary>Which areas do you deliver to?</summary>
+      <p>QuickCart's demo shops currently cover Agege, Alimosho, Ikeja, Kosofe, Ajah, Lekki, Victoria Island, Somolu, Surulere, and Yaba. The store directory shows which areas each shop serves.</p>
+    </details>
+    <details>
+      <summary>How do I find stores that deliver to me?</summary>
+      <p>Choose your Lagos area on the home page. You can also use your device location to center the map, then confirm your area to load matching stores and products.</p>
+    </details>
+    <details>
+      <summary>Does QuickCart need my location permission?</summary>
+      <p>No. You can choose your area from the list without sharing device location. If you use the location button, your browser asks permission and QuickCart uses the coordinates only to center the map.</p>
+    </details>
+    <details>
+      <summary>What is the delivery fee?</summary>
+      <p>The current demo uses a flat ₦800 delivery fee per order.</p>
+    </details>
+    <details>
+      <summary>Do I need an account to order?</summary>
+      <p>You can browse without signing in. Sign in or create an account when you're ready to place your order.</p>
+    </details>
+    <details>
+      <summary>Where can I see my past orders?</summary>
+      <p>After signing in, open My orders from the navigation menu to review your order details and delivery addresses.</p>
+    </details>
+    <details>
+      <summary>Can I track my rider live?</summary>
+      <p>My orders shows a simulated delivery timeline for this demo. It is not connected to a rider, GPS location, or a real-time delivery service.</p>
+    </details>
+    <details>
+      <summary>How can my store join QuickCart?</summary>
+      <p>Use the List your store link on the home page to create a merchant account and submit a Lagos business profile. Applications remain private and pending review in this demo; KYC identity documents are not collected, and there is no admin approval portal yet.</p>
+    </details>
+  </section>
+
+  <div class="help-action">
+    <div>
+      <h2>Ready to browse?</h2>
+      <p>Choose your area and see what's available nearby.</p>
+    </div>
+    <a href="index.html#location">Find nearby shops <span aria-hidden="true">→</span></a>
+  </div>
+</main>
+
+<script src="common.js"></script>
+<script>renderAccountNav('accountNav');</script>
+</body>
+</html>

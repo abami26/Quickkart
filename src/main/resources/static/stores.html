@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nearby stores — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="accountNav"></ul></nav>
+</header>
+
+<main class="directory-page">
+  <div class="directory-heading">
+    <div>
+      <span class="location-kicker">LOCAL PARTNERS</span>
+      <h1>Stores near you</h1>
+      <p>Choose an area to see the shops and products available for delivery.</p>
+    </div>
+    <label class="directory-filter" for="storeArea">
+      Delivery area
+      <select id="storeArea">
+        <option value="">All covered areas</option>
+        <option>Agege</option><option>Alimosho</option><option>Ikeja</option><option>Kosofe</option>
+        <option>Ajah</option><option>Lekki</option><option>Victoria Island</option>
+        <option>Somolu</option><option>Surulere</option><option>Yaba</option>
+      </select>
+    </label>
+  </div>
+  <p class="directory-status" id="directoryStatus" role="status">Loading partner stores...</p>
+  <div class="directory-grid" id="storeDirectory"></div>
+</main>
+
+<script src="common.js"></script>
+<script>
+const coveredAreas = [
+  'Agege', 'Alimosho', 'Ikeja', 'Kosofe', 'Ajah',
+  'Lekki', 'Victoria Island', 'Somolu', 'Surulere', 'Yaba'
+];
+let stores = [];
+
+async function loadStores() {
+  const status = document.getElementById('directoryStatus');
+  const area = document.getElementById('storeArea').value;
+  status.textContent = 'Loading partner stores...';
+
+  try {
+    const results = await Promise.all(coveredAreas.map(city => api(`/api/stores?city=${encodeURIComponent(city)}`)));
+    const uniqueStores = new Map(results.flat().map(store => [store.id, store]));
+    stores = [...uniqueStores.values()];
+    renderStores(area);
+  } catch (err) {
+    status.textContent = err.message;
+  }
+}
+
+function renderStores(area = '') {
+  const visibleStores = area
+    ? stores.filter(store => store.serviceAreas.includes(area))
+    : stores;
+  const grid = document.getElementById('storeDirectory');
+  const status = document.getElementById('directoryStatus');
+
+  if (visibleStores.length === 0) {
+    status.textContent = `No partner stores are listed for ${area} yet.`;
+    grid.innerHTML = '';
+    return;
+  }
+
+  status.textContent = `${visibleStores.length} partner store${visibleStores.length === 1 ? '' : 's'} serving ${area || 'Lagos'}.`;
+  grid.innerHTML = visibleStores.map(store => `
+    <article class="directory-card">
+      <div class="directory-card-head">
+        <div class="store-icon">${store.icon}</div>
+        <div><h2>${store.name}</h2><p>${store.category}</p></div>
+      </div>
+      <div class="directory-detail">
+        <strong>${store.products.length} products</strong>
+        <span>Delivery areas</span>
+        <div class="area-list">${store.serviceAreas.map(serviceArea => `<span>${serviceArea}</span>`).join('')}</div>
+      </div>
+      <div class="directory-products">
+        ${store.products.slice(0, 4).map(product => `<span>${product.icon} ${product.name}</span>`).join('')}
+      </div>
+      <a class="directory-cta" href="index.html?area=${encodeURIComponent(area || store.serviceAreas[0])}">Shop this store <span aria-hidden="true">→</span></a>
+    </article>
+  `).join('');
+}
+
+document.getElementById('storeArea').addEventListener('change', event => renderStores(event.target.value));
+renderAccountNav('accountNav');
+loadStores();
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merchant dashboard — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul>
+    <li><a href="index.html">Shop</a></li>
+    <li><a href="merchant-dashboard.html">My store</a></li>
+    <li><button class="account-pill" type="button" onclick="logout()">Log out</button></li>
+  </ul></nav>
+</header>
+
+<main class="merchant-page">
+  <div class="merchant-page-heading merchant-dashboard-heading">
+    <div>
+      <span class="location-kicker">MERCHANT DASHBOARD</span>
+      <h1 id="dashboardTitle">Your store profile</h1>
+      <p>Update the information submitted for your QuickCart application.</p>
+    </div>
+    <span class="merchant-status" id="kycStatus">Loading review status…</span>
+  </div>
+
+  <div class="merchant-notice merchant-review-notice">
+    <strong id="reviewTitle">Your application is under review</strong>
+    <p id="reviewMessage">Your store is not publicly listed while it is pending. This demo has no admin verification portal and does not collect identity documents.</p>
+  </div>
+  <p class="auth-error" id="errorMsg" role="alert"></p>
+  <p class="merchant-success" id="successMsg" role="status"></p>
+
+  <form class="merchant-form" id="merchantProfileForm">
+    <fieldset>
+      <legend>Owner and contact</legend>
+      <div class="merchant-form-grid">
+        <label>Owner or contact name<input id="ownerName" maxlength="120" required></label>
+        <label>Business phone<input id="phone" type="tel" maxlength="30" required></label>
+        <label>Email<input id="email" type="email" readonly aria-readonly="true"></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Store profile</legend>
+      <div class="merchant-form-grid">
+        <label>Store name<input id="storeName" maxlength="120" required></label>
+        <label>Category
+          <select id="category" required>
+            <option>Groceries & essentials</option><option>Fresh produce</option><option>Meals & restaurant</option>
+            <option>Bakery</option><option>Drinks & snacks</option><option>Household</option>
+            <option>Personal care</option><option>Other</option>
+          </select>
+        </label>
+        <label class="merchant-full-field">Short description<textarea id="description" rows="3" maxlength="1000"></textarea></label>
+        <label class="merchant-full-field">Store address<input id="address" maxlength="240" required></label>
+        <label>City
+          <select id="city" required>
+            <option>Agege</option><option>Alimosho</option><option>Ajah</option><option>Badagry</option>
+            <option>Epe</option><option>Ikeja</option><option>Kosofe</option><option>Lekki</option>
+            <option>Ojo</option><option>Somolu</option><option>Surulere</option><option>Victoria Island</option><option>Yaba</option>
+          </select>
+        </label>
+        <label>State<input value="Lagos" readonly aria-readonly="true"></label>
+      </div>
+      <div class="service-area-field">
+        <span class="service-area-label">Areas you serve <small>Select one or more</small></span>
+        <div class="service-area-options">
+          <label><input type="checkbox" name="serviceArea" value="Agege"> Agege</label>
+          <label><input type="checkbox" name="serviceArea" value="Alimosho"> Alimosho</label>
+          <label><input type="checkbox" name="serviceArea" value="Ajah"> Ajah</label>
+          <label><input type="checkbox" name="serviceArea" value="Badagry"> Badagry</label>
+          <label><input type="checkbox" name="serviceArea" value="Epe"> Epe</label>
+          <label><input type="checkbox" name="serviceArea" value="Ikeja"> Ikeja</label>
+          <label><input type="checkbox" name="serviceArea" value="Kosofe"> Kosofe</label>
+          <label><input type="checkbox" name="serviceArea" value="Lekki"> Lekki</label>
+          <label><input type="checkbox" name="serviceArea" value="Ojo"> Ojo</label>
+          <label><input type="checkbox" name="serviceArea" value="Somolu"> Somolu</label>
+          <label><input type="checkbox" name="serviceArea" value="Surulere"> Surulere</label>
+          <label><input type="checkbox" name="serviceArea" value="Victoria Island"> Victoria Island</label>
+          <label><input type="checkbox" name="serviceArea" value="Yaba"> Yaba</label>
+        </div>
+      </div>
+    </fieldset>
+    <button class="auth-btn merchant-save-button" type="submit" id="saveProfileButton">Save store profile</button>
+  </form>
+
+  <section class="merchant-kyc-checklist" aria-labelledby="kycChecklistTitle">
+    <h2 id="kycChecklistTitle">KYC review checklist</h2>
+    <p>For a real verification, an authorized reviewer would securely check these items outside this demo:</p>
+    <ul>
+      <li>Owner or authorized representative identity</li>
+      <li>Business registration details, where applicable</li>
+      <li>Proof of the operating address</li>
+      <li>Confirmation that listed products and service areas are accurate</li>
+    </ul>
+    <strong>No ID number, document, or bank detail is requested or uploaded here.</strong>
+  </section>
+</main>
+
+<script src="common.js"></script>
+<script>
+const merchantUser = getUser();
+if (!merchantUser || merchantUser.accountType !== 'merchant' || !getToken()) {
+  window.location.replace('merchant-login.html');
+}
+
+function setProfileField(id, value) {
+  document.getElementById(id).value = value ?? '';
+}
+
+async function loadMerchantProfile() {
+  try {
+    const merchant = await api('/api/merchant/me');
+    document.getElementById('dashboardTitle').textContent = merchant.storeName || 'Your store profile';
+    setProfileField('ownerName', merchant.ownerName);
+    setProfileField('phone', merchant.phone);
+    setProfileField('email', merchant.email);
+    setProfileField('storeName', merchant.storeName);
+    setProfileField('category', merchant.category);
+    setProfileField('description', merchant.description);
+    setProfileField('address', merchant.address);
+    setProfileField('city', merchant.city);
+    const selectedAreas = new Set(merchant.serviceAreas || []);
+    document.querySelectorAll('input[name="serviceArea"]').forEach(input => {
+      input.checked = selectedAreas.has(input.value);
+    });
+    const status = merchant.kycStatus === 'pending_review' ? 'Pending review' : merchant.kycStatus;
+    document.getElementById('kycStatus').textContent = `KYC: ${status}`;
+    document.getElementById('reviewTitle').textContent = `Application status: ${status}`;
+    const reviewMessage = merchant.kycStatus === 'pending_review'
+      ? 'Your application is saved but your store is not publicly listed yet. This demo does not collect identity documents.'
+      : merchant.kycStatus === 'approved'
+        ? 'Your business profile was approved in the demo review. Approval does not publish your store in the customer catalog yet.'
+        : merchant.kycStatus === 'rejected'
+          ? 'Your application was rejected in the demo review. Contact QuickCart support if you believe this was a mistake.'
+          : 'The reviewer requested updates to your application. Make the requested updates below and save your profile to resubmit.';
+    document.getElementById('reviewMessage').textContent = merchant.reviewNote
+      ? `${reviewMessage} Reviewer note: ${merchant.reviewNote}`
+      : reviewMessage;
+  } catch (error) {
+    const box = document.getElementById('errorMsg');
+    box.textContent = error.message;
+    box.classList.add('show');
+  }
+}
+
+document.getElementById('merchantProfileForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const error = document.getElementById('errorMsg');
+  const success = document.getElementById('successMsg');
+  const button = document.getElementById('saveProfileButton');
+  error.classList.remove('show');
+  success.textContent = '';
+  const serviceAreas = [...document.querySelectorAll('input[name="serviceArea"]:checked')].map(input => input.value);
+  if (!serviceAreas.length) {
+    error.textContent = 'Choose at least one area your store serves.';
+    error.classList.add('show');
+    return;
+  }
+  button.disabled = true;
+  try {
+    const merchant = await api('/api/merchant/me', {
+      method: 'PUT',
+      body: JSON.stringify({
+        ownerName: document.getElementById('ownerName').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        storeName: document.getElementById('storeName').value.trim(),
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        city: document.getElementById('city').value,
+        state: 'Lagos',
+        serviceAreas
+      })
+    });
+    document.getElementById('dashboardTitle').textContent = merchant.storeName;
+    success.textContent = 'Store profile updated. Its application remains pending review.';
+  } catch (err) {
+    error.textContent = err.message;
+    error.classList.add('show');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+if (merchantUser?.accountType === 'merchant' && getToken()) loadMerchantProfile();
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My orders — QuickCart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="brand">Quick<span>Cart</span></a>
+  <nav><ul id="accountNav"></ul></nav>
+</header>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>My orders</h2>
+      <p>Everything you've ordered through QuickCart.</p>
+    </div>
+  </div>
+  <div id="ordersList"></div>
+</section>
+
+<script src="common.js"></script>
+<script>
+let trackingPoll = null;
+let ordersLoading = false;
+
+function renderTracking(tracking) {
+  if (!tracking?.demo) return '';
+
+  const step = Math.max(0, Math.min(3, Number(tracking.step) || 0));
+  const progress = Math.round((step / 3) * 100);
+  const stages = ['Order confirmed', 'Being prepared', 'On the way', 'Delivered'];
+  const steps = stages.map((label, index) => {
+    const state = index < step || (step === 3 && index === 3)
+      ? 'complete'
+      : index === step ? 'current' : '';
+    const current = state === 'current' ? ' aria-current="step"' : '';
+    return `<li class="tracking-step ${state}"${current}><span>${index < step ? '✓' : index + 1}</span><span>${label}</span></li>`;
+  }).join('');
+  const eta = tracking.stage === 'delivered'
+    ? 'Delivery complete'
+    : `About ${Number(tracking.etaMinutes) || 1} min remaining`;
+
+  return `
+    <section class="demo-tracking" aria-label="Simulated order tracking">
+      <div class="tracking-heading">
+        <div>
+          <span class="tracking-kicker">DEMO TRACKING</span>
+          <h3>Delivery progress</h3>
+        </div>
+        <span class="tracking-disclaimer">Illustrative · not live GPS</span>
+      </div>
+      <div class="tracking-route" aria-hidden="true">
+        <div class="tracking-route-line">
+          <span class="tracking-route-progress" style="width:${progress}%"></span>
+          <span class="tracking-rider" style="left:${progress}%">●</span>
+        </div>
+        <div class="tracking-route-labels"><span>Partner shop</span><span>Your area</span></div>
+      </div>
+      <ol class="tracking-steps">${steps}</ol>
+      <div class="tracking-current" aria-live="polite">
+        <div><strong>${escapeHtml(tracking.label)}</strong><span>${escapeHtml(tracking.message)}</span></div>
+        <span class="tracking-eta">${eta}</span>
+      </div>
+      <p class="tracking-demo-note">This demo advances automatically from the order time. No rider location is connected.</p>
+    </section>
+  `;
+}
+
+async function loadOrders() {
+  if (!getUser() || getUser().accountType === 'merchant') {
+    if (getUser()?.accountType === 'merchant') {
+      window.location.href = 'merchant-dashboard.html';
+      return;
+    }
+    window.location.href = 'login.html';
+    return;
+  }
+  if (ordersLoading) return;
+  ordersLoading = true;
+  const list = document.getElementById('ordersList');
+  try {
+    const { orders } = await api('/api/orders/mine');
+    if (!orders.length) {
+      list.innerHTML = `<div class="empty-msg">No orders yet. <a href="index.html">Go place one →</a></div>`;
+      return;
+    }
+    list.innerHTML = orders.map(o => `
+      <div class="order-card">
+        <div class="order-top">
+          <span>Order #${escapeHtml(o.id)}</span>
+          <span class="badge">${escapeHtml(o.tracking?.label || o.status)}</span>
+        </div>
+        <div class="order-items">
+          ${(Array.isArray(o.items) ? o.items : []).map(i => `${escapeHtml(i.qty)}× ${escapeHtml(i.name)}`).join(' · ')}
+        </div>
+        <div class="order-items" style="color:var(--muted);font-size:13px;">
+          Delivering to: ${escapeHtml(o.address)}
+        </div>
+        <div class="order-items" style="color:var(--muted);font-size:13px;">
+          Payment: ${o.paymentStatus === 'demo_only' ? 'Demo only — no payment collected' : 'Not recorded'}
+        </div>
+        <div class="order-total">${money(o.total)}</div>
+        ${renderTracking(o.tracking)}
+      </div>
+    `).join('');
+    const hasActiveTracking = orders.some(order => order.tracking?.demo && order.tracking.stage !== 'delivered');
+    if (hasActiveTracking && !trackingPoll) {
+      trackingPoll = setInterval(loadOrders, 15000);
+    } else if (!hasActiveTracking && trackingPoll) {
+      clearInterval(trackingPoll);
+      trackingPoll = null;
+    }
+  } catch (err) {
+    list.innerHTML = `<div class="empty-msg">${err.message}</div>`;
+  } finally {
+    ordersLoading = false;
+  }
+}
+
+renderAccountNav('accountNav');
+loadOrders();
+</script>
+</body>
+</html>
