@@ -52,6 +52,7 @@ You need two things installed:
 - `stores.html` — filter partner stores by covered Lagos area
 - `help.html` — delivery coverage, location, payment, and order FAQs
 - `signup.html` / `login.html` — create an account / sign in
+- `forgot-password.html` / `reset-password.html` — recover an account with a one-time email link
 - `orders.html` — see your past orders (only visible when logged in)
 - `merchant-signup.html` / `merchant-login.html` — create or access a store application
 - `merchant-dashboard.html` — view KYC review status and update store profile and coverage areas
@@ -93,6 +94,8 @@ real delivery status feed.
 | POST   | `/api/visits`       | No             | Count a consenting unique browser |
 | POST   | `/api/signup`       | No             | Create an account          |
 | POST   | `/api/login`        | No             | Log in, get a token        |
+| POST   | `/api/forgot-password` | No           | Email a one-time password reset link |
+| POST   | `/api/reset-password` | No            | Set a new password using a reset token |
 | POST   | `/api/merchant/signup` | No          | Create a Lagos merchant application |
 | POST   | `/api/merchant/login`  | No          | Log in to a merchant account |
 | GET    | `/api/merchant/me`  | Merchant       | Read merchant profile and KYC status |
@@ -104,6 +107,13 @@ real delivery status feed.
 Auth uses a JSON Web Token (JWT), same as the Node.js version — the token is
 stored in the browser's `localStorage` after login and sent as
 `Authorization: Bearer <token>` on every request that needs it.
+
+Password recovery requires an SMTP service. Configure `MAIL_HOST`, `MAIL_PORT`,
+`MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH`, `MAIL_SMTP_STARTTLS`, and
+`MAIL_FROM` for your mail provider. Set `APP_BASE_URL` to the public base URL
+of this app so reset links point to the correct site. For local development,
+the defaults target an SMTP server at `localhost:1025`; requests for unknown
+email addresses receive the same confirmation as registered addresses.
 
 The homepage asks for a Lagos area before showing nearby shops and products.
 The current demo coverage is seeded for Agege, Alimosho, Ikeja, Kosofe, Ajah,

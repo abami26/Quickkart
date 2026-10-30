@@ -383,11 +383,18 @@ body.modal-open{overflow:hidden;}
 }
 .auth-switch{text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px;}
 .auth-switch a{color:var(--green-mid);font-weight:600;text-decoration:none;cursor:pointer;}
+.auth-recovery{text-align:right;margin:-4px 0 12px;font-size:13px;}
+.auth-recovery a{color:var(--green-mid);font-weight:600;text-decoration:none;}
 .auth-error{
   background:#FBEAE7;color:var(--error);font-size:13px;padding:10px 12px;border-radius:8px;
   margin-bottom:16px;display:none;
 }
 .auth-error.show{display:block;}
+.auth-success{
+  background:#E9F3EC;color:var(--green-deep);font-size:13px;padding:10px 12px;border-radius:8px;
+  margin-bottom:16px;display:none;
+}
+.auth-success.show{display:block;}
 
 /* ORDERS PAGE */
 .order-card{

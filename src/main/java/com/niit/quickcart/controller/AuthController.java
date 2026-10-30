@@ -6,8 +6,11 @@ import com.niit.quickcart.exception.UnauthorizedException;
 import com.niit.quickcart.model.User;
 import com.niit.quickcart.repository.UserRepository;
 import com.niit.quickcart.security.JwtUtil;
+import com.niit.quickcart.service.PasswordResetService;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -15,10 +18,15 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(UserRepository userRepository, JwtUtil jwtUtil) {
+    public AuthController(
+            UserRepository userRepository,
+            JwtUtil jwtUtil,
+            PasswordResetService passwordResetService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/signup")
@@ -58,6 +66,18 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(user);
         return new AuthResponse(token, new UserSummary(user.getId(), user.getName(), user.getEmail()));
+    }
+
+    @PostMapping("/forgot-password")
+    public Map<String, String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestPasswordReset(request.email);
+        return Map.of("message", "If an account exists for that email, a password reset link has been sent.");
+    }
+
+    @PostMapping("/reset-password")
+    public Map<String, String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.token, request.password);
+        return Map.of("message", "Your password has been reset. You can now log in.");
     }
 
     @GetMapping("/me")
