@@ -30,6 +30,18 @@
 let trackingPoll = null;
 let ordersLoading = false;
 
+function paymentLabel(status) {
+  if (status === 'awaiting_confirmation') return 'Receipt received — awaiting confirmation (up to 24 hours)';
+  if (status === 'confirmed') return 'Payment confirmed';
+  if (status === 'demo_only') return 'Demo only — no payment collected';
+  return 'Not recorded';
+}
+
+function statusLabel(status) {
+  if (status === 'pending_confirmation') return 'Awaiting payment confirmation';
+  return status;
+}
+
 function renderTracking(tracking) {
   if (!tracking?.demo) return '';
 
@@ -95,7 +107,7 @@ async function loadOrders() {
       <div class="order-card">
         <div class="order-top">
           <span>Order #${escapeHtml(o.id)}</span>
-          <span class="badge">${escapeHtml(o.tracking?.label || o.status)}</span>
+          <span class="badge">${escapeHtml(o.tracking?.label || statusLabel(o.status))}</span>
         </div>
         <div class="order-items">
           ${(Array.isArray(o.items) ? o.items : []).map(i => `${escapeHtml(i.qty)}× ${escapeHtml(i.name)}`).join(' · ')}
@@ -104,7 +116,7 @@ async function loadOrders() {
           Delivering to: ${escapeHtml(o.address)}
         </div>
         <div class="order-items" style="color:var(--muted);font-size:13px;">
-          Payment: ${o.paymentStatus === 'demo_only' ? 'Demo only — no payment collected' : 'Not recorded'}
+          Payment: ${paymentLabel(o.paymentStatus)}
         </div>
         <div class="order-total">${money(o.total)}</div>
         ${renderTracking(o.tracking)}

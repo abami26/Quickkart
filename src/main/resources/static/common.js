@@ -85,7 +85,9 @@ function logout() {
 // Wrapper around fetch that attaches the auth token automatically
 async function api(path, options = {}) {
   const token = getToken();
-  const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+  // FormData (file uploads) must set its own multipart Content-Type with boundary.
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const headers = Object.assign(isForm ? {} : { 'Content-Type': 'application/json' }, options.headers || {});
   if (token) headers['Authorization'] = 'Bearer ' + token;
 
   const res = await fetch(path, Object.assign({}, options, { headers }));

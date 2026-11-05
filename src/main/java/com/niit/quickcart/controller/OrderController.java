@@ -11,7 +11,10 @@ import com.niit.quickcart.data.ProductCatalog;
 import com.niit.quickcart.repository.OrderRepository;
 import com.niit.quickcart.security.JwtUtil;
 import com.niit.quickcart.service.DemoOrderTracking;
+import com.niit.quickcart.service.ReceiptStorage;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,23 +25,31 @@ public class OrderController {
 
     private final OrderRepository orderRepository;
     private final JwtUtil jwtUtil;
+    private final ReceiptStorage receiptStorage;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public OrderController(OrderRepository orderRepository, JwtUtil jwtUtil) {
+    public OrderController(OrderRepository orderRepository, JwtUtil jwtUtil, ReceiptStorage receiptStorage) {
         this.orderRepository = orderRepository;
         this.jwtUtil = jwtUtil;
+        this.receiptStorage = receiptStorage;
     }
 
-    @PostMapping
+    /**
+     * Places an order paid by bank transfer. The customer pays to the shop account first,
+     * then uploads the receipt with the order. Payment is confirmed manually (up to 24 hours).
+     */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Map<String, Object> placeOrder(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody OrderRequest req) {
+            @RequestPart("order") OrderRequest req,
+            @RequestPart(value = "receipt", required = false) MultipartFile receipt) {
 
         Long userId = jwtUtil.requireUserId(authHeader);
 
-        if (!"DEMO".equals(req.paymentMethod)) {
-            throw new BadRequestException("Only the clearly labeled demo payment flow is available.");
+        if (!"BANK_TRANSFER".equals(req.paymentMethod)) {
+            throw new BadRequestException("Please pay by bank transfer and upload your receipt.");
         }
+        String receiptExtension = receiptStorage.validate(receipt);
         if (req.items == null || req.items.isEmpty()) {
             throw new BadRequestException("Your cart is empty.");
         }
@@ -94,11 +105,18 @@ public class OrderController {
         order.setSubtotal(subtotal);
         order.setDeliveryFee(deliveryFee);
         order.setTotal(subtotal + deliveryFee);
-        order.setStatus("placed");
-        order.setPaymentStatus("demo_only");
+        order.setStatus("pending_confirmation");
+        order.setPaymentStatus("awaiting_confirmation");
         order.setItemsJson(writeItemsJson(lineItems));
 
-        order = orderRepository.save(order);
+        String storedReceipt = receiptStorage.save(receipt, receiptExtension);
+        order.setReceiptFile(storedReceipt);
+        try {
+            order = orderRepository.save(order);
+        } catch (RuntimeException e) {
+            receiptStorage.delete(storedReceipt);
+            throw e;
+        }
 
         return Map.of("order", toResponse(order));
     }
@@ -142,6 +160,7 @@ public class OrderController {
         map.put("deliveryFee", order.getDeliveryFee());
         map.put("total", order.getTotal());
         map.put("paymentStatus", order.getPaymentStatus() == null ? "not_recorded" : order.getPaymentStatus());
+        map.put("receiptUploaded", order.getReceiptFile() != null);
         map.put("createdAt", order.getCreatedAt().toString());
         if ("demo_only".equals(order.getPaymentStatus())) {
             map.put("tracking", DemoOrderTracking.forOrder(order.getCreatedAt(), LocalDateTime.now()));

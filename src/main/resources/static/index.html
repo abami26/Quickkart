@@ -301,15 +301,40 @@
 <div class="payment-modal" id="paymentModal" hidden>
   <section class="payment-dialog" role="dialog" aria-modal="true" aria-labelledby="paymentTitle" aria-describedby="paymentNotice">
     <span class="success-eyebrow">CHECKOUT · FINAL STEP</span>
-    <h2 id="paymentTitle">Confirm demo payment</h2>
+    <h2 id="paymentTitle">Pay by bank transfer</h2>
     <p class="payment-total-label">Order total</p>
     <p class="payment-total" id="paymentTotal">₦0</p>
-    <div class="payment-demo-notice" id="paymentNotice">
-      <strong>Demo only — no money will be charged.</strong>
-      <span>This project does not process real payments or collect payment details.</span>
+
+    <div class="payment-account">
+      <strong class="payment-account-title">Transfer to this account</strong>
+      <div class="payment-account-row" id="bankNameRow" hidden>
+        <span>Bank</span><b id="bankName"></b>
+      </div>
+      <div class="payment-account-row">
+        <span>Account name</span><b>Caleb Adesunloye</b>
+      </div>
+      <div class="payment-account-row">
+        <span>Account number</span>
+        <b id="accountNumber">8158865442</b>
+        <button type="button" class="payment-copy" id="copyAccountBtn" onclick="copyAccountNumber()">Copy</button>
+      </div>
     </div>
-    <button type="button" class="success-done" id="demoPaymentSubmit" onclick="confirmDemoPayment()">Simulate payment &amp; place order</button>
-    <button type="button" class="payment-cancel" id="cancelDemoPayment" onclick="closePaymentModal()">Back to checkout</button>
+
+    <label class="receipt-upload" for="receiptInput" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('receiptInput').click();}">
+      <strong>Upload payment receipt</strong>
+      <span id="receiptName">Tap to choose a screenshot, photo or PDF (max 5MB)</span>
+      <input type="file" id="receiptInput" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="onReceiptChosen(this)" hidden>
+    </label>
+
+    <div class="payment-demo-notice payment-wait-notice" id="paymentNotice">
+      <strong>Payment confirmation may take up to 24 hours</strong>
+      <span>After you upload your receipt, we verify the transfer manually. Your order shows as “awaiting confirmation” until then.</span>
+    </div>
+
+    <p class="payment-error" id="paymentError" role="alert" hidden></p>
+
+    <button type="button" class="success-done" id="paymentSubmit" onclick="submitPaidOrder()" disabled>I've paid — submit receipt &amp; place order</button>
+    <button type="button" class="payment-cancel" id="cancelPayment" onclick="closePaymentModal()">Back to checkout</button>
   </section>
 </div>
 
@@ -544,7 +569,7 @@ function showOrderSuccess(order){
   const message = document.getElementById('orderSuccessMessage');
   const reference = document.getElementById('orderSuccessReference');
   previousFocus = document.getElementById('cartButton');
-  message.textContent = `Your order has been placed successfully${order?.total != null ? ` for ${money(order.total)}` : ''}.`;
+  message.textContent = `Your order${order?.total != null ? ` of ${money(order.total)}` : ''} has been placed. We received your receipt, and payment confirmation may take up to 24 hours.`;
   reference.textContent = order?.id ? `Order #${order.id}` : '';
   modal.hidden = false;
   document.body.classList.add('modal-open');
@@ -565,7 +590,8 @@ function openPaymentModal(){
   previousFocus = document.getElementById('checkoutBtn');
   modal.hidden = false;
   document.body.classList.add('modal-open');
-  document.getElementById('demoPaymentSubmit').focus();
+  resetReceipt();
+  document.getElementById('copyAccountBtn').focus();
 }
 
 function closePaymentModal(){
@@ -587,7 +613,7 @@ document.addEventListener('keydown', event => {
     return;
   }
   if (event.key === 'Tab') {
-    const focusable = modal.querySelectorAll('button:not([disabled]), a[href]');
+    const focusable = modal.querySelectorAll('button:not([disabled]), a[href], label[tabindex="0"]');
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     if (event.shiftKey && document.activeElement === first) {
@@ -631,32 +657,98 @@ function checkout(){
   openPaymentModal();
 }
 
-async function confirmDemoPayment(){
+// Bank to pay into. Set BANK_NAME to show a "Bank" row in the checkout popup.
+const BANK_NAME = 'Moremonee Bank';
+const RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
+const RECEIPT_HINT = 'Tap to choose a screenshot, photo or PDF (max 5MB)';
+
+if (BANK_NAME) {
+  document.getElementById('bankName').textContent = BANK_NAME;
+  document.getElementById('bankNameRow').hidden = false;
+}
+
+function showPaymentError(message){
+  const el = document.getElementById('paymentError');
+  el.textContent = message || '';
+  el.hidden = !message;
+}
+
+function resetReceipt(){
+  document.getElementById('receiptInput').value = '';
+  document.getElementById('receiptName').textContent = RECEIPT_HINT;
+  document.getElementById('paymentSubmit').disabled = true;
+  showPaymentError('');
+}
+
+function onReceiptChosen(input){
+  const file = input.files[0];
+  const submit = document.getElementById('paymentSubmit');
+  submit.disabled = true;
+  showPaymentError('');
+  if (!file) { document.getElementById('receiptName').textContent = RECEIPT_HINT; return; }
+  const okType = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(file.type);
+  if (!okType) {
+    input.value = '';
+    document.getElementById('receiptName').textContent = RECEIPT_HINT;
+    showPaymentError('Receipt must be a JPG, PNG, WEBP or PDF file.');
+    return;
+  }
+  if (file.size > RECEIPT_MAX_BYTES) {
+    input.value = '';
+    document.getElementById('receiptName').textContent = RECEIPT_HINT;
+    showPaymentError('Receipt is too large. Maximum size is 5MB.');
+    return;
+  }
+  document.getElementById('receiptName').textContent = file.name;
+  submit.disabled = false;
+}
+
+async function copyAccountNumber(){
+  const button = document.getElementById('copyAccountBtn');
+  try {
+    await navigator.clipboard.writeText(document.getElementById('accountNumber').textContent.trim());
+    button.textContent = 'Copied';
+    setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+  } catch (err) {
+    showToast('Could not copy. Please copy the account number manually.', true);
+  }
+}
+
+async function submitPaidOrder(){
   if (isSubmittingOrder) return;
-  const button = document.getElementById('demoPaymentSubmit');
+  const file = document.getElementById('receiptInput').files[0];
+  if (!file) { showPaymentError('Please upload your payment receipt.'); return; }
+
+  const button = document.getElementById('paymentSubmit');
   const street = document.getElementById('streetAddress').value.trim();
   const city = document.getElementById('citySelect').value.trim();
   const state = document.getElementById('stateSelect').value.trim();
   const address = `${street}, ${city}, ${state}`;
+
+  const form = new FormData();
+  form.append('order', new Blob(
+    [JSON.stringify({ items: cart, address, street, city, state, paymentMethod: 'BANK_TRANSFER' })],
+    { type: 'application/json' }
+  ));
+  form.append('receipt', file);
+
   isSubmittingOrder = true;
   button.disabled = true;
-  button.textContent = 'Placing demo order...';
+  button.textContent = 'Uploading receipt...';
+  showPaymentError('');
   try {
-    const result = await api('/api/orders', {
-      method: 'POST',
-      body: JSON.stringify({ items: cart, address, street, city, state, paymentMethod: 'DEMO' })
-    });
+    const result = await api('/api/orders', { method: 'POST', body: form });
     document.getElementById('paymentModal').hidden = true;
     cart = {};
     updateCart();
     closeCart();
     showOrderSuccess(result.order);
   } catch (err) {
-    showToast(err.message, true);
+    showPaymentError(err.message);
   } finally {
     isSubmittingOrder = false;
-    button.disabled = false;
-    button.textContent = 'Simulate payment & place order';
+    button.disabled = !document.getElementById('receiptInput').files[0];
+    button.textContent = "I've paid — submit receipt & place order";
   }
 }
 

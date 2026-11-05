@@ -313,6 +313,31 @@ body.modal-open{overflow:hidden;}
 }
 .payment-demo-notice strong{color:#315D27;font-size:13px;}
 .payment-demo-notice span{color:var(--muted);font-size:12px;line-height:1.45;}
+.payment-account{
+  width:100%;margin-bottom:12px;padding:13px 14px;border:1px solid #D9E9CE;border-radius:10px;
+  background:#F1F8E9;text-align:left;
+}
+.payment-account-title{display:block;margin-bottom:8px;color:#315D27;font-size:13px;}
+.payment-account-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;}
+.payment-account-row span{flex:0 0 108px;color:var(--muted);}
+.payment-account-row b{flex:1;color:#17221B;word-break:break-all;}
+.payment-account-row[hidden]{display:none;}
+.payment-copy{
+  padding:4px 11px;border:1px solid var(--green-deep);border-radius:8px;background:#fff;
+  color:var(--green-deep);font:600 12px 'Inter',sans-serif;cursor:pointer;
+}
+.receipt-upload{
+  display:flex;flex-direction:column;gap:4px;width:100%;margin-bottom:12px;padding:14px;
+  border:2px dashed #C9C2B6;border-radius:10px;cursor:pointer;text-align:center;
+}
+.receipt-upload:hover,.receipt-upload:focus-within{border-color:var(--green-deep);background:#FAFAF7;}
+.receipt-upload strong{color:#17221B;font-size:14px;}
+.receipt-upload span{color:var(--muted);font-size:12px;word-break:break-all;}
+.payment-wait-notice{border-color:#F0D995;background:#FFF8E6;}
+.payment-wait-notice strong{color:#7A5B00;}
+.payment-error{width:100%;margin:12px 0 0;color:#B00020;font-size:13px;text-align:left;}
+.payment-error[hidden]{display:none;}
+.payment-dialog .success-done:disabled{opacity:.45;cursor:not-allowed;}
 .payment-dialog .success-done{margin-top:20px;}
 .payment-cancel{
   margin-top:13px;padding:8px;border:0;background:transparent;color:var(--muted);
@@ -383,18 +408,11 @@ body.modal-open{overflow:hidden;}
 }
 .auth-switch{text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px;}
 .auth-switch a{color:var(--green-mid);font-weight:600;text-decoration:none;cursor:pointer;}
-.auth-recovery{text-align:right;margin:-4px 0 12px;font-size:13px;}
-.auth-recovery a{color:var(--green-mid);font-weight:600;text-decoration:none;}
 .auth-error{
   background:#FBEAE7;color:var(--error);font-size:13px;padding:10px 12px;border-radius:8px;
   margin-bottom:16px;display:none;
 }
 .auth-error.show{display:block;}
-.auth-success{
-  background:#E9F3EC;color:var(--green-deep);font-size:13px;padding:10px 12px;border-radius:8px;
-  margin-bottom:16px;display:none;
-}
-.auth-success.show{display:block;}
 
 /* ORDERS PAGE */
 .order-card{

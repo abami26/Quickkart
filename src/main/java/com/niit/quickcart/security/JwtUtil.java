@@ -96,24 +96,6 @@ public class JwtUtil {
         }
     }
 
-    public Long requireMerchantId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Please log in to your merchant account first.");
-        }
-
-        try {
-            Claims claims = parseClaims(authHeader.substring(7));
-            if (!"merchant".equals(claims.get("accountType", String.class))) {
-                throw new UnauthorizedException("A merchant account is required.");
-            }
-            return Long.parseLong(claims.getSubject());
-        } catch (UnauthorizedException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UnauthorizedException("Your merchant session expired. Please log in again.");
-        }
-    }
-
     public String requireAdminEmail(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new UnauthorizedException("Please log in as an admin first.");
@@ -129,6 +111,24 @@ public class JwtUtil {
             throw e;
         } catch (Exception e) {
             throw new UnauthorizedException("Your admin session expired. Please log in again.");
+        }
+    }
+
+    public Long requireMerchantId(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Please log in to your merchant account first.");
+        }
+
+        try {
+            Claims claims = parseClaims(authHeader.substring(7));
+            if (!"merchant".equals(claims.get("accountType", String.class))) {
+                throw new UnauthorizedException("A merchant account is required.");
+            }
+            return Long.parseLong(claims.getSubject());
+        } catch (UnauthorizedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UnauthorizedException("Your merchant session expired. Please log in again.");
         }
     }
 

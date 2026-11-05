@@ -32,6 +32,10 @@ public class Order {
     @Column
     private String paymentStatus;
 
+    // Stored file name of the customer's uploaded bank-transfer receipt (null for older demo orders).
+    @Column
+    private String receiptFile;
+
     // The cart line items (product id, name, price, qty), stored as a JSON string.
     // Keeps the schema simple for a class project instead of a separate order_items table.
     @Lob
@@ -106,6 +110,14 @@ public class Order {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public String getReceiptFile() {
+        return receiptFile;
+    }
+
+    public void setReceiptFile(String receiptFile) {
+        this.receiptFile = receiptFile;
     }
 
     public String getItemsJson() {

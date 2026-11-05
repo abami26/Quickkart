@@ -18,15 +18,6 @@ public class Dtos {
         public String password;
     }
 
-    public static class ForgotPasswordRequest {
-        public String email;
-    }
-
-    public static class ResetPasswordRequest {
-        public String token;
-        public String password;
-    }
-
     public static class MerchantSignupRequest {
         public String ownerName;
         public String email;
