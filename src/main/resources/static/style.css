@@ -408,6 +408,9 @@ body.modal-open{overflow:hidden;}
 }
 .auth-switch{text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px;}
 .auth-switch a{color:var(--green-mid);font-weight:600;text-decoration:none;cursor:pointer;}
+.auth-forgot-password{margin:-8px 0 14px;text-align:right;font-size:12px;}
+.auth-forgot-password a{color:var(--green-mid);font-weight:600;text-decoration:none;}
+.auth-forgot-password a:hover{text-decoration:underline;}
 .auth-error{
   background:#FBEAE7;color:var(--error);font-size:13px;padding:10px 12px;border-radius:8px;
   margin-bottom:16px;display:none;
